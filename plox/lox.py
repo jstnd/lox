@@ -1,12 +1,14 @@
 import sys
 
+from scanner import Scanner
+
 
 class Lox:
     def __init__(self):
         self.had_error = False
 
     def run(self, pgm: str):
-        scanner = Scanner(pgm)
+        scanner = Scanner(pgm, self)
         tokens = scanner.scan_tokens()
 
         for token in tokens:
