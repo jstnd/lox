@@ -1,14 +1,12 @@
 import sys
 
+from errors import LoxErrors
 from scanner import Scanner
 
 
 class Lox:
-    def __init__(self):
-        self.had_error = False
-
     def run(self, pgm: str):
-        scanner = Scanner(pgm, self)
+        scanner = Scanner(pgm)
         tokens = scanner.scan_tokens()
 
         for token in tokens:
@@ -20,14 +18,7 @@ class Lox:
             if not line:
                 break
             self.run(line)
-            self.had_error = False
-
-    def error(self, line: int, message: str):
-        self.report(line, "", message)
-
-    def report(self, line: int, where: str, message: str):
-        print(f"[line {line}] Error{where}: {message}")
-        self.had_error = True
+            LoxErrors.had_error = False
 
 
 if __name__ == "__main__":
@@ -38,7 +29,7 @@ if __name__ == "__main__":
         sys.exit(64)
     elif len(sys.argv) == 1:
         lox.run(open(sys.argv[1]).read())
-        if lox.had_error:
+        if LoxErrors.had_error:
             sys.exit(65)
     else:
         lox.run_prompt()

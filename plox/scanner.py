@@ -1,16 +1,13 @@
 from typing import Any
 
+from errors import LoxErrors
 from tokens import Token, TokenType
-from lox import Lox
 
 
 class Scanner:
-    def __init__(self, source: str, interpreter: Lox):
+    def __init__(self, source: str):
         self.source = source
-        self.interpreter = interpreter
-
         self.tokens: list[Token] = []
-
         self.start = 0
         self.current = 0
         self.line = 1
@@ -55,7 +52,7 @@ class Scanner:
                 if self.is_digit(c):
                     self.number()
                 else:
-                    self.interpreter.error(self.line, "Unexpected character.")
+                    LoxErrors.error(self.line, "Unexpected character.")
 
     def add_token(self, type: TokenType, literal: Any = None) -> None:
         text = self.source[self.start:self.current]
@@ -96,7 +93,7 @@ class Scanner:
             self.advance()
 
         if self.at_end():
-            self.interpreter.error(self.line, "Unterminated string.")
+            LoxErrors.error(self.line, "Unterminated string.")
             return
 
         # closing "
