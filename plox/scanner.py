@@ -5,6 +5,25 @@ from tokens import Token, TokenType
 
 
 class Scanner:
+    keywords: dict[str, TokenType] = {
+        "and":    TokenType.AND,
+        "class":  TokenType.CLASS,
+        "else":   TokenType.ELSE,
+        "false":  TokenType.FALSE,
+        "for":    TokenType.FOR,
+        "fun":    TokenType.FUN,
+        "if":     TokenType.IF,
+        "nil":    TokenType.NIL,
+        "or":     TokenType.OR,
+        "print":  TokenType.PRINT,
+        "return": TokenType.RETURN,
+        "super":  TokenType.SUPER,
+        "this":   TokenType.THIS,
+        "true":   TokenType.TRUE,
+        "var":    TokenType.VAR,
+        "while":  TokenType.WHILE,
+    }
+
     def __init__(self, source: str):
         self.source = source
         self.tokens: list[Token] = []
@@ -51,15 +70,17 @@ class Scanner:
             case _:
                 if self.is_digit(c):
                     self.number()
+                elif self.is_alpha(c):
+                    self.identifier()
                 else:
                     LoxErrors.error(self.line, "Unexpected character.")
 
     def add_token(self, type: TokenType, literal: Any = None) -> None:
-        text = self.source[self.start:self.current]
+        text: str = self.source[self.start:self.current]
         self.tokens.append(Token(type, text, literal, self.line))
 
     def advance(self) -> str:
-        c = self.source[self.current]
+        c: str = self.source[self.current]
         self.current += 1
         return c
 
@@ -82,8 +103,14 @@ class Scanner:
 
         return self.source[self.current + 1]
 
+    def is_alpha(self, c: str) -> bool:
+        return "a" <= c <= "z" or "A" <= c <= "Z" or c == "_"
+
     def is_digit(self, c: str) -> bool:
         return "0" <= c <= "9"
+
+    def is_alpha_numeric(self, c: str) -> bool:
+        return self.is_alpha(c) or self.is_digit(c)
 
     def string(self) -> None:
         while self.peek() != '"' and not self.at_end():
@@ -100,7 +127,7 @@ class Scanner:
         self.advance()
 
         # trim surrounding quotes
-        value = self.source[self.start + 1:self.current - 1]
+        value: str = self.source[self.start + 1:self.current - 1]
         self.add_token(TokenType.STRING, value)
 
     def number(self) -> None:
@@ -114,3 +141,14 @@ class Scanner:
                 self.advance()
 
         self.add_token(TokenType.NUMBER, float(self.source[self.start:self.current]))
+
+    def identifier(self) -> None:
+        while self.is_alpha_numeric(self.peek()):
+            self.advance()
+
+        text: str = self.source[self.start:self.current]
+        type: TokenType = Scanner.keywords.get(text, None)
+        if type is None:
+            type = TokenType.IDENTIFIER
+
+        self.add_token(type)
