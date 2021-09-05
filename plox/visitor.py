@@ -1,7 +1,9 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .expr import Binary, Grouping, Literal, Unary
+if TYPE_CHECKING:
+    from .expr import Binary, Grouping, Literal, Unary
 
 
 class Visitor(ABC):

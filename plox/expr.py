@@ -1,9 +1,11 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .tokens import Token
-from .visitor import Visitor
+if TYPE_CHECKING:
+    from .tokens import Token
+    from .visitor import Visitor
 
 
 class Expr(ABC):
