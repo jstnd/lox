@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
+from .errors import LoxErrors, ParseError
 from .expr import Binary, Grouping, Literal, Unary
 from .tokens import TokenType
 
@@ -85,7 +86,10 @@ class Parser:
             return Grouping(expr)
 
     def _consume(self, type: TokenType, message: str):
-        ...
+        if self._check(type):
+            return self._advance()
+
+        raise self._error(self._peek(), message)
 
     def _match(self, *types: TokenType) -> bool:
         for t in types:
@@ -113,3 +117,21 @@ class Parser:
 
     def _previous(self) -> Token:
         return self._tokens[self._current - 1]
+
+    def _error(self, token: Token, message: str) -> ParseError:
+        LoxErrors.token_error(token, message)
+        return ParseError()
+
+    def _synchronize(self) -> None:
+        self._advance()
+
+        while not self._at_end():
+            if self._previous().type == TokenType.SEMICOLON:
+                return
+
+            match self._peek().type:
+                case TokenType.CLASS | TokenType.FUN | TokenType.VAR | TokenType.FOR\
+                     | TokenType.IF | TokenType.WHILE | TokenType.PRINT | TokenType.RETURN:
+                    return
+
+            self._advance()
