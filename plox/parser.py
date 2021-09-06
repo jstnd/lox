@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
 from .expr import Binary, Grouping, Literal, Unary
@@ -15,6 +15,12 @@ class Parser:
     def __init__(self, tokens: list[Token]):
         self._tokens: Final = tokens
         self._current = 0
+
+    def parse(self) -> Optional[Expr]:
+        try:
+            return self._expression()
+        except ParseError:
+            return None
 
     def _expression(self) -> Expr:
         return self._equality()
@@ -84,6 +90,8 @@ class Parser:
             expr: Expr = self._expression()
             self._consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
             return Grouping(expr)
+
+        raise self._error(self._peek(), "Expect expression.")
 
     def _consume(self, type: TokenType, message: str):
         if self._check(type):
