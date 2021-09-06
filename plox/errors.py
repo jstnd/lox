@@ -30,3 +30,10 @@ class LoxErrors:
 
 class ParseError(Exception):
     pass
+
+
+class LoxRuntimeError(Exception):
+    def __init__(self, token: Token, message: str):
+        self.token = token
+        super.__init__(message)
+

@@ -1,7 +1,8 @@
 from typing import Any
 
+from .errors import LoxRuntimeError
 from .expr import Expr, Unary, Literal, Grouping, Binary
-from .tokens import TokenType
+from .tokens import Token, TokenType
 from .visitor import Visitor
 
 
@@ -12,25 +13,34 @@ class Interpreter(Visitor):
 
         match expr.operator.type:
             case TokenType.GREATER:
+                self._check_number_operands(expr.operator, left, right)
                 return left > right
             case TokenType.GREATER_EQUAL:
+                self._check_number_operands(expr.operator, left, right)
                 return left >= right
             case TokenType.LESS:
+                self._check_number_operands(expr.operator, left, right)
                 return left < right
             case TokenType.LESS_EQUAL:
+                self._check_number_operands(expr.operator, left, right)
                 return left <= right
             case TokenType.BANG_EQUAL:
                 return not self._is_equal(left, right)
             case TokenType.EQUAL_EQUAL:
                 return self._is_equal(left, right)
             case TokenType.MINUS:
+                self._check_number_operands(expr.operator, left, right)
                 return left - right
             case TokenType.PLUS:
-                if type(left) == type(right):
+                if (type(left) is float and type(right) is float) or (type(left) is str and type(right) is str):
                     return left + right
+
+                raise LoxRuntimeError(expr.operator, "Operands must be two numbers or two strings.")
             case TokenType.SLASH:
+                self._check_number_operands(expr.operator, left, right)
                 return left / right
             case TokenType.STAR:
+                self._check_number_operands(expr.operator, left, right)
                 return left * right
 
     def visit_grouping_expr(self, expr: Grouping) -> Any:
@@ -46,7 +56,20 @@ class Interpreter(Visitor):
             case TokenType.BANG:
                 return not self._is_truthy(right)
             case TokenType.MINUS:
+                self._check_number_operand(expr.operator, right)
                 return -float(right)
+
+    def _check_number_operand(self, operator: Token, operand: Any) -> None:
+        if type(operand) is float:
+            return
+
+        raise LoxRuntimeError(operator, "Operand must be a number.")
+
+    def _check_number_operands(self, operator: Token, left: Any, right: Any) -> None:
+        if type(left) is float and type(right) is float:
+            return
+
+        raise LoxRuntimeError(operator, "Operands must be numbers.")
 
     def _is_truthy(self, obj: Any) -> bool:
         if obj is None:
@@ -63,7 +86,7 @@ class Interpreter(Visitor):
 
         if a is None:
             return False
-        
+
         return a == b
 
     def _evaluate(self, expr: Expr) -> Any:
