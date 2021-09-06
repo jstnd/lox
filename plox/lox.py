@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
-from .ast_printer import AstPrinter
 from .errors import LoxErrors
+from .interpreter import Interpreter
 from .parser import Parser
 from .scanner import Scanner
 
@@ -14,6 +13,8 @@ if TYPE_CHECKING:
 
 
 class Lox:
+    interpreter: Final = Interpreter()
+
     def run(self, pgm: str):
         scanner = Scanner(pgm)
         tokens: list[Token] = scanner.scan_tokens()
@@ -23,7 +24,7 @@ class Lox:
         if LoxErrors.had_error:
             return
 
-        print(AstPrinter().print(expression))
+        Lox.interpreter.interpret(expression)
 
     def run_prompt(self):
         while True:
@@ -32,17 +33,3 @@ class Lox:
                 break
             self.run(line)
             LoxErrors.had_error = False
-
-
-# if __name__ == "__main__":
-#     lox = Lox()
-#
-#     if len(sys.argv) > 2:
-#         print("Usage: lox.py [script]")
-#         sys.exit(64)
-#     elif len(sys.argv) == 2:
-#         lox.run(open(sys.argv[1]).read())
-#         if LoxErrors.had_error:
-#             sys.exit(65)
-#     else:
-#         lox.run_prompt()

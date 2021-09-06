@@ -12,5 +12,8 @@ if __name__ == "__main__":
         lox.run(open(sys.argv[1]).read())
         if LoxErrors.had_error:
             sys.exit(65)
+
+        if LoxErrors.had_runtime_error:
+            sys.exit(70)
     else:
         lox.run_prompt()

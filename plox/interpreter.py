@@ -1,12 +1,19 @@
 from typing import Any
 
-from .errors import LoxRuntimeError
+from .errors import LoxErrors, LoxRuntimeError
 from .expr import Expr, Unary, Literal, Grouping, Binary
 from .tokens import Token, TokenType
 from .visitor import Visitor
 
 
 class Interpreter(Visitor):
+    def interpret(self, expression: Expr) -> None:
+        try:
+            value: Any = self._evaluate(expression)
+            print(self._stringify(value))
+        except LoxRuntimeError as e:
+            LoxErrors.runtime_error(e)
+
     def visit_binary_expr(self, expr: Binary) -> Any:
         left: Any = self._evaluate(expr.left)
         right: Any = self._evaluate(expr.right)
@@ -88,6 +95,19 @@ class Interpreter(Visitor):
             return False
 
         return a == b
+
+    def _stringify(self, obj: Any) -> str:
+        if obj is None:
+            return "nil"
+
+        if type(obj) is float:
+            text = str(obj)
+            if text.endswith(".0"):
+                text = text[0:len(text) - 2]
+
+            return text
+
+        return str(obj)
 
     def _evaluate(self, expr: Expr) -> Any:
         return expr.accept(self)
