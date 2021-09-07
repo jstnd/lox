@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .expr import Binary, Grouping, Literal, Unary
-    from .stmt import Expression, Print
+    from .expr import Binary, Grouping, Literal, Unary, Variable
+    from .stmt import Expression, Print, Var
 
 
 class ExprVisitor(ABC):
@@ -24,6 +24,10 @@ class ExprVisitor(ABC):
     def visit_unary_expr(self, expr: Unary) -> Any:
         raise NotImplementedError
 
+    @abstractmethod
+    def visit_variable_expr(self, expr: Variable) -> Any:
+        raise NotImplementedError
+
 
 class StmtVisitor(ABC):
     @abstractmethod
@@ -32,4 +36,8 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_print_stmt(self, stmt: Print) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_var_stmt(self, stmt: Var) -> None:
         raise NotImplementedError

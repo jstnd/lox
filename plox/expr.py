@@ -47,3 +47,11 @@ class Unary(Expr):
 
     def accept(self, visitor: ExprVisitor) -> Any:
         return visitor.visit_unary_expr(self)
+
+
+@dataclass
+class Variable(Expr):
+    name: Token
+
+    def accept(self, visitor: ExprVisitor) -> Any:
+        return visitor.visit_variable_expr(self)

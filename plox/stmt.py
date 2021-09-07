@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .expr import Expr
+    from .tokens import Token
     from .visitor import StmtVisitor
 
 
@@ -28,3 +29,12 @@ class Print(Stmt):
 
     def accept(self, visitor: StmtVisitor) -> Any:
         return visitor.visit_print_stmt(self)
+
+
+@dataclass
+class Var(Stmt):
+    name: Token
+    initializer: Expr
+
+    def accept(self, visitor: StmtVisitor) -> Any:
+        return visitor.visit_var_stmt(self)
