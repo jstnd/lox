@@ -8,7 +8,7 @@ from .parser import Parser
 from .scanner import Scanner
 
 if TYPE_CHECKING:
-    from .expr import Expr
+    from .stmt import Stmt
     from .tokens import Token
 
 
@@ -19,12 +19,12 @@ class Lox:
         scanner = Scanner(pgm)
         tokens: list[Token] = scanner.scan_tokens()
         parser = Parser(tokens)
-        expression: Expr = parser.parse()
+        statements: list[Stmt] = parser.parse()
 
         if LoxErrors.had_error:
             return
 
-        Lox.interpreter.interpret(expression)
+        Lox.interpreter.interpret(statements)
 
     def run_prompt(self):
         while True:

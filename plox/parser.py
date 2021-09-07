@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final, Optional
+from typing import TYPE_CHECKING, Final
 
 from .errors import LoxErrors, ParseError
 from .expr import Binary, Grouping, Literal, Unary
+from .stmt import Expression, Print
 from .tokens import TokenType
 
 if TYPE_CHECKING:
     from .expr import Expr
+    from .stmt import Stmt
     from .tokens import Token
 
 
@@ -16,14 +18,32 @@ class Parser:
         self._tokens: Final = tokens
         self._current = 0
 
-    def parse(self) -> Optional[Expr]:
-        try:
-            return self._expression()
-        except ParseError:
-            return None
+    def parse(self) -> list[Stmt]:
+        statements: list[Stmt] = []
+
+        while not self._at_end():
+            statements.append(self._statement())
+
+        return statements
 
     def _expression(self) -> Expr:
         return self._equality()
+
+    def _statement(self) -> Stmt:
+        if self._match(TokenType.PRINT):
+            return self._print_statement()
+
+        return self._expression_statement()
+
+    def _print_statement(self) -> Stmt:
+        value: Expr = self._expression()  # parse subsequent expression
+        self._consume(TokenType.SEMICOLON, "Expect ';' after value.")  # consume terminating semicolon
+        return Print(value)  # emit stmt.Print syntax tree
+
+    def _expression_statement(self) -> Stmt:
+        value: Expr = self._expression()  # parse subsequent expression
+        self._consume(TokenType.SEMICOLON, "Expect ';' after expression.")  # consume terminating semicolon
+        return Expression(value)  # emit stmt.Expression syntax tree
 
     def _equality(self) -> Expr:
         expr: Expr = self._comparison()

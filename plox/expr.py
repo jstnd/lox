@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .tokens import Token
-    from .visitor import Visitor
+    from .visitor import ExprVisitor
 
 
 class Expr(ABC):
     @abstractmethod
-    def accept(self, visitor: Visitor) -> Any:
+    def accept(self, visitor: ExprVisitor) -> Any:
         pass
 
 
@@ -20,7 +20,7 @@ class Binary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: Visitor) -> Any:
+    def accept(self, visitor: ExprVisitor) -> Any:
         return visitor.visit_binary_expr(self)
 
 
@@ -28,7 +28,7 @@ class Binary(Expr):
 class Grouping(Expr):
     expression: Expr
 
-    def accept(self, visitor: Visitor) -> Any:
+    def accept(self, visitor: ExprVisitor) -> Any:
         return visitor.visit_grouping_expr(self)
 
 
@@ -36,7 +36,7 @@ class Grouping(Expr):
 class Literal(Expr):
     value: Any
 
-    def accept(self, visitor: Visitor) -> Any:
+    def accept(self, visitor: ExprVisitor) -> Any:
         return visitor.visit_literal_expr(self)
 
 
@@ -45,5 +45,5 @@ class Unary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: Visitor) -> Any:
+    def accept(self, visitor: ExprVisitor) -> Any:
         return visitor.visit_unary_expr(self)

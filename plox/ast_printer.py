@@ -1,13 +1,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from .visitor import Visitor
+from .visitor import ExprVisitor
 
 if TYPE_CHECKING:
     from .expr import Expr, Unary, Literal, Grouping, Binary
 
 
-class AstPrinter(Visitor):
+class AstPrinter(ExprVisitor):
     def print(self, expr: Expr) -> str:
         return expr.accept(self)
 

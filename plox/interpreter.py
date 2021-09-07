@@ -2,15 +2,16 @@ from typing import Any
 
 from .errors import LoxErrors, LoxRuntimeError
 from .expr import Expr, Unary, Literal, Grouping, Binary
+from .stmt import Stmt, Print, Expression
 from .tokens import Token, TokenType
-from .visitor import Visitor
+from .visitor import ExprVisitor, StmtVisitor
 
 
-class Interpreter(Visitor):
-    def interpret(self, expression: Expr) -> None:
+class Interpreter(ExprVisitor, StmtVisitor):
+    def interpret(self, statements: list[Stmt]) -> None:
         try:
-            value: Any = self._evaluate(expression)
-            print(self._stringify(value))
+            for statement in statements:
+                self._execute(statement)
         except LoxRuntimeError as e:
             LoxErrors.runtime_error(e)
 
@@ -66,6 +67,13 @@ class Interpreter(Visitor):
                 self._check_number_operand(expr.operator, right)
                 return -float(right)
 
+    def visit_expression_stmt(self, stmt: Expression) -> None:
+        self._evaluate(stmt.expression)
+
+    def visit_print_stmt(self, stmt: Print) -> None:
+        value: Any = self._evaluate(stmt.expression)
+        print(self._stringify(value))
+
     def _check_number_operand(self, operator: Token, operand: Any) -> None:
         if type(operand) is float:
             return
@@ -111,3 +119,6 @@ class Interpreter(Visitor):
 
     def _evaluate(self, expr: Expr) -> Any:
         return expr.accept(self)
+
+    def _execute(self, stmt: Stmt) -> None:
+        stmt.accept(self)
