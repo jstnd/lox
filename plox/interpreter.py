@@ -1,13 +1,17 @@
 from typing import Any
 
+from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
-from .expr import Expr, Unary, Literal, Grouping, Binary
-from .stmt import Stmt, Print, Expression
+from .expr import Expr, Unary, Literal, Grouping, Binary, Variable
+from .stmt import Stmt, Print, Expression, Var
 from .tokens import Token, TokenType
 from .visitor import ExprVisitor, StmtVisitor
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
+    def __init__(self):
+        self._environment = Environment()
+
     def interpret(self, statements: list[Stmt]) -> None:
         try:
             for statement in statements:
@@ -67,12 +71,22 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 self._check_number_operand(expr.operator, right)
                 return -float(right)
 
+    def visit_variable_expr(self, expr: Variable) -> Any:
+        return self._environment.get(expr.name)
+
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self._evaluate(stmt.expression)
 
     def visit_print_stmt(self, stmt: Print) -> None:
         value: Any = self._evaluate(stmt.expression)
         print(self._stringify(value))
+
+    def visit_var_stmt(self, stmt: Var) -> None:
+        value: Any = None
+        if stmt.initializer is not None:
+            value = self._evaluate(stmt.initializer)
+
+        self._environment.define(stmt.name.lexeme, value)
 
     def _check_number_operand(self, operator: Token, operand: Any) -> None:
         if type(operand) is float:
