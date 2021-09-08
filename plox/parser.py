@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
-from .expr import Binary, Grouping, Literal, Unary, Variable
+from .expr import Assign, Binary, Grouping, Literal, Unary, Variable
 from .stmt import Expression, Print, Var
 from .tokens import TokenType
 
@@ -27,7 +27,7 @@ class Parser:
         return statements
 
     def _expression(self) -> Expr:
-        return self._equality()
+        return self._assignment()
 
     def _declaration(self) -> Optional[Stmt]:
         try:
@@ -63,6 +63,21 @@ class Parser:
         value: Expr = self._expression()  # parse subsequent expression
         self._consume(TokenType.SEMICOLON, "Expect ';' after expression.")  # consume terminating semicolon
         return Expression(value)  # emit stmt.Expression syntax tree
+
+    def _assignment(self) -> Expr:
+        expr: Expr = self._equality()
+
+        if self._match(TokenType.EQUAL):
+            equals: Token = self._previous()
+            value: Expr = self._assignment()
+
+            if type(expr) is Variable:
+                name: Token = expr.name
+                return Assign(name, value)
+
+            self._error(equals, "Invalid assignment target.")
+
+        return expr
 
     def _equality(self) -> Expr:
         expr: Expr = self._comparison()

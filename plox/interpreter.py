@@ -2,7 +2,7 @@ from typing import Any
 
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
-from .expr import Expr, Unary, Literal, Grouping, Binary, Variable
+from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable
 from .stmt import Stmt, Print, Expression, Var
 from .tokens import Token, TokenType
 from .visitor import ExprVisitor, StmtVisitor
@@ -18,6 +18,11 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 self._execute(statement)
         except LoxRuntimeError as e:
             LoxErrors.runtime_error(e)
+
+    def visit_assign_expr(self, expr: Assign) -> Any:
+        value: Any = self._evaluate(expr.value)
+        self._environment.assign(expr.name, value)
+        return value
 
     def visit_binary_expr(self, expr: Binary) -> Any:
         left: Any = self._evaluate(expr.left)

@@ -3,11 +3,15 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .expr import Binary, Grouping, Literal, Unary, Variable
+    from .expr import Assign, Binary, Grouping, Literal, Unary, Variable
     from .stmt import Expression, Print, Var
 
 
 class ExprVisitor(ABC):
+    @abstractmethod
+    def visit_assign_expr(self, expr: Assign) -> Any:
+        raise NotImplementedError
+
     @abstractmethod
     def visit_binary_expr(self, expr: Binary) -> Any:
         raise NotImplementedError
