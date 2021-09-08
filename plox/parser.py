@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
-from .expr import Assign, Binary, Grouping, Literal, Unary, Variable
+from .expr import Assign, Binary, Grouping, Literal, Logical, Unary, Variable
 from .stmt import Block, Expression, If, Print, Var
 from .tokens import TokenType
 
@@ -92,7 +92,7 @@ class Parser:
         return statements
 
     def _assignment(self) -> Expr:
-        expr: Expr = self._equality()
+        expr: Expr = self._or()
 
         if self._match(TokenType.EQUAL):
             equals: Token = self._previous()
@@ -103,6 +103,26 @@ class Parser:
                 return Assign(name, value)
 
             self._error(equals, "Invalid assignment target.")
+
+        return expr
+
+    def _or(self) -> Expr:
+        expr: Expr = self._and()
+
+        while self._match(TokenType.OR):
+            operator: Token = self._previous()
+            right: Expr = self._and()
+            expr = Logical(expr, operator, right)
+
+        return expr
+
+    def _and(self) -> Expr:
+        expr: Expr = self._equality()
+
+        while self._match(TokenType.AND):
+            operator: Token = self._previous()
+            right: Expr = self._equality()
+            expr = Logical(expr, operator, right)
 
         return expr
 

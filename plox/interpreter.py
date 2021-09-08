@@ -2,7 +2,7 @@ from typing import Any
 
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
-from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable
+from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical
 from .stmt import Stmt, Print, Expression, Var, Block, If
 from .tokens import Token, TokenType
 from .visitor import ExprVisitor, StmtVisitor
@@ -65,6 +65,18 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_literal_expr(self, expr: Literal) -> Any:
         return expr.value
+
+    def visit_logical_expr(self, expr: Logical) -> Any:
+        left: Any = self._evaluate(expr.left)
+
+        if expr.operator.type == TokenType.OR:
+            if self._is_truthy(left):
+                return left
+        else:
+            if not self._is_truthy(left):
+                return left
+
+        return self._evaluate(expr.right)
 
     def visit_unary_expr(self, expr: Unary) -> Any:
         right: Any = self._evaluate(expr.right)

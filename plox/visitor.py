@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .expr import Assign, Binary, Grouping, Literal, Unary, Variable
+    from .expr import Assign, Binary, Grouping, Literal, Logical, Unary, Variable
     from .stmt import Block, Expression, If, Print, Var
 
 
@@ -22,6 +22,10 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_literal_expr(self, expr: Literal) -> Any:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_logical_expr(self, expr: Logical) -> Any:
         raise NotImplementedError
 
     @abstractmethod
