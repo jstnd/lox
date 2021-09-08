@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
 from .expr import Assign, Binary, Call, Grouping, Literal, Logical, Unary, Variable
-from .stmt import Block, Expression, If, Print, Var, While
+from .stmt import Block, Expression, Function, If, Print, Var, While
 from .tokens import TokenType
 
 if TYPE_CHECKING:
@@ -31,6 +31,9 @@ class Parser:
 
     def _declaration(self) -> Optional[Stmt]:
         try:
+            if self._match(TokenType.FUN):
+                return self._function("function")
+
             if self._match(TokenType.VAR):
                 return self._var_declaration()
 
@@ -93,6 +96,34 @@ class Parser:
 
         return body
 
+    def _expression_statement(self) -> Stmt:
+        value: Expr = self._expression()  # parse subsequent expression
+        self._consume(TokenType.SEMICOLON, "Expect ';' after expression.")  # consume terminating semicolon
+        return Expression(value)  # emit stmt.Expression syntax tree
+
+    def _function(self, kind: str) -> Function:
+        name: Token = self._consume(TokenType.IDENTIFIER, f"Expect {kind} name.")
+
+        self._consume(TokenType.LEFT_PAREN, f"Expect '(' after {kind} name.")
+
+        parameters: list[Token] = []
+        if not self._check(TokenType.RIGHT_PAREN):
+            while True:
+                if len(parameters) >= 255:
+                    self._error(self._peek(), "Can't have more than 255 parameters.")
+
+                parameters.append(self._consume(TokenType.IDENTIFIER, "Expect parameter name."))
+
+                if not self._match(TokenType.COMMA):
+                    break
+
+        self._consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
+        self._consume(TokenType.LEFT_BRACE, f"Expect '{{' before {kind} body.")
+
+        body: list[Stmt] = self._block()
+
+        return Function(name, parameters, body)
+
     def _if_statement(self) -> Stmt:
         self._consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
         condition: Expr = self._expression()
@@ -127,11 +158,6 @@ class Parser:
         body: Stmt = self._statement()
 
         return While(condition, body)
-
-    def _expression_statement(self) -> Stmt:
-        value: Expr = self._expression()  # parse subsequent expression
-        self._consume(TokenType.SEMICOLON, "Expect ';' after expression.")  # consume terminating semicolon
-        return Expression(value)  # emit stmt.Expression syntax tree
 
     def _block(self) -> list[Stmt]:
         statements: list[Stmt] = []

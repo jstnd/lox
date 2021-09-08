@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .expr import Assign, Binary, Call, Grouping, Literal, Logical, Unary, Variable
-    from .stmt import Block, Expression, If, Print, Var, While
+    from .stmt import Block, Expression, Function, If, Print, Var, While
 
 
 class ExprVisitor(ABC):
@@ -48,6 +48,10 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_expression_stmt(self, stmt: Expression) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_function_stmt(self, stmt: Function) -> None:
         raise NotImplementedError
 
     @abstractmethod

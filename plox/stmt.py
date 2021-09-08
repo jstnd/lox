@@ -32,6 +32,16 @@ class Expression(Stmt):
 
 
 @dataclass
+class Function(Stmt):
+    name: Token
+    params: list[Token]
+    body: list[Stmt]
+
+    def accept(self, visitor: StmtVisitor) -> Any:
+        return visitor.visit_function_stmt(self)
+
+
+@dataclass
 class If(Stmt):
     condition: Expr
     then_branch: Stmt
