@@ -32,6 +32,16 @@ class Expression(Stmt):
 
 
 @dataclass
+class If(Stmt):
+    condition: Expr
+    then_branch: Stmt
+    else_branch: Stmt
+
+    def accept(self, visitor: StmtVisitor) -> Any:
+        return visitor.visit_if_stmt(self)
+
+
+@dataclass
 class Print(Stmt):
     expression: Expr
 

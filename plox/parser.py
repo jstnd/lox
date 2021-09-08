@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
 from .expr import Assign, Binary, Grouping, Literal, Unary, Variable
-from .stmt import Block, Expression, Print, Var
+from .stmt import Block, Expression, If, Print, Var
 from .tokens import TokenType
 
 if TYPE_CHECKING:
@@ -39,6 +39,9 @@ class Parser:
             self._synchronize()
 
     def _statement(self) -> Stmt:
+        if self._match(TokenType.IF):
+            return self._if_statement()
+
         if self._match(TokenType.PRINT):
             return self._print_statement()
 
@@ -46,6 +49,18 @@ class Parser:
             return Block(self._block())
 
         return self._expression_statement()
+
+    def _if_statement(self) -> Stmt:
+        self._consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
+        condition: Expr = self._expression()
+        self._consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.")
+
+        then_branch: Stmt = self._statement()
+        else_branch: Optional[Stmt] = None
+        if self._match(TokenType.ELSE):
+            else_branch = self._statement()
+
+        return If(condition, then_branch, else_branch)
 
     def _print_statement(self) -> Stmt:
         value: Expr = self._expression()  # parse subsequent expression

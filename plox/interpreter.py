@@ -3,7 +3,7 @@ from typing import Any
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
 from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable
-from .stmt import Stmt, Print, Expression, Var, Block
+from .stmt import Stmt, Print, Expression, Var, Block, If
 from .tokens import Token, TokenType
 from .visitor import ExprVisitor, StmtVisitor
 
@@ -84,6 +84,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self._evaluate(stmt.expression)
+
+    def visit_if_stmt(self, stmt: If) -> None:
+        if self._is_truthy(self._evaluate(stmt.condition)):
+            self._execute(stmt.then_branch)
+        elif stmt.else_branch is not None:
+            self._execute(stmt.else_branch)
 
     def visit_print_stmt(self, stmt: Print) -> None:
         value: Any = self._evaluate(stmt.expression)
