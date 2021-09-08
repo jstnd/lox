@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
 from .expr import Assign, Binary, Grouping, Literal, Logical, Unary, Variable
-from .stmt import Block, Expression, If, Print, Var
+from .stmt import Block, Expression, If, Print, Var, While
 from .tokens import TokenType
 
 if TYPE_CHECKING:
@@ -45,6 +45,9 @@ class Parser:
         if self._match(TokenType.PRINT):
             return self._print_statement()
 
+        if self._match(TokenType.WHILE):
+            return self._while_statement()
+
         if self._match(TokenType.LEFT_BRACE):
             return Block(self._block())
 
@@ -76,6 +79,14 @@ class Parser:
 
         self._consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
         return Var(name, initializer)
+
+    def _while_statement(self) -> Stmt:
+        self._consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.")
+        condition: Expr = self._expression()
+        self._consume(TokenType.RIGHT_PAREN, "Expect ')' after while condition.")
+        body: Stmt = self._statement()
+
+        return While(condition, body)
 
     def _expression_statement(self) -> Stmt:
         value: Expr = self._expression()  # parse subsequent expression

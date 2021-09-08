@@ -3,7 +3,7 @@ from typing import Any
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
 from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical
-from .stmt import Stmt, Print, Expression, Var, Block, If
+from .stmt import Stmt, Print, Expression, Var, Block, If, While
 from .tokens import Token, TokenType
 from .visitor import ExprVisitor, StmtVisitor
 
@@ -113,6 +113,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
             value = self._evaluate(stmt.initializer)
 
         self._environment.define(stmt.name.lexeme, value)
+
+    def visit_while_stmt(self, stmt: While) -> None:
+        while self._is_truthy(self._evaluate(stmt.condition)):
+            self._execute(stmt.body)
 
     def _check_number_operand(self, operator: Token, operand: Any) -> None:
         if type(operand) is float:

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .expr import Assign, Binary, Grouping, Literal, Logical, Unary, Variable
-    from .stmt import Block, Expression, If, Print, Var
+    from .stmt import Block, Expression, If, Print, Var, While
 
 
 class ExprVisitor(ABC):
@@ -56,4 +56,8 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_var_stmt(self, stmt: Var) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_while_stmt(self, stmt: While) -> None:
         raise NotImplementedError
