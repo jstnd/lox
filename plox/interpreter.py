@@ -3,7 +3,7 @@ from typing import Any
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
 from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable
-from .stmt import Stmt, Print, Expression, Var
+from .stmt import Stmt, Print, Expression, Var, Block
 from .tokens import Token, TokenType
 from .visitor import ExprVisitor, StmtVisitor
 
@@ -79,6 +79,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def visit_variable_expr(self, expr: Variable) -> Any:
         return self._environment.get(expr.name)
 
+    def visit_block_stmt(self, stmt: Block) -> None:
+        self._execute_block(stmt.statements, Environment(self._environment))
+
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self._evaluate(stmt.expression)
 
@@ -141,3 +144,14 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def _execute(self, stmt: Stmt) -> None:
         stmt.accept(self)
+
+    def _execute_block(self, statements: list[Stmt], environment: Environment) -> None:
+        previous: Environment = self._environment
+
+        try:
+            self._environment = environment
+
+            for statement in statements:
+                self._execute(statement)
+        finally:
+            self._environment = previous

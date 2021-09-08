@@ -16,6 +16,14 @@ class Stmt(ABC):
 
 
 @dataclass
+class Block(Stmt):
+    statements: list[Stmt]
+
+    def accept(self, visitor: StmtVisitor) -> Any:
+        return visitor.visit_block_stmt(self)
+
+
+@dataclass
 class Expression(Stmt):
     expression: Expr
 

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
 from .expr import Assign, Binary, Grouping, Literal, Unary, Variable
-from .stmt import Expression, Print, Var
+from .stmt import Block, Expression, Print, Var
 from .tokens import TokenType
 
 if TYPE_CHECKING:
@@ -42,6 +42,9 @@ class Parser:
         if self._match(TokenType.PRINT):
             return self._print_statement()
 
+        if self._match(TokenType.LEFT_BRACE):
+            return Block(self._block())
+
         return self._expression_statement()
 
     def _print_statement(self) -> Stmt:
@@ -63,6 +66,15 @@ class Parser:
         value: Expr = self._expression()  # parse subsequent expression
         self._consume(TokenType.SEMICOLON, "Expect ';' after expression.")  # consume terminating semicolon
         return Expression(value)  # emit stmt.Expression syntax tree
+
+    def _block(self) -> list[Stmt]:
+        statements: list[Stmt] = []
+
+        while not self._check(TokenType.RIGHT_BRACE) and not self._at_end():
+            statements.append(self._declaration())
+
+        self._consume(TokenType.RIGHT_BRACE, "Expect '}' after block.")
+        return statements
 
     def _assignment(self) -> Expr:
         expr: Expr = self._equality()
