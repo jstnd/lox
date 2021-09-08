@@ -1,4 +1,5 @@
-from typing import Any
+import time
+from typing import Any, Final
 
 from .callable import LoxCallable
 from .environment import Environment
@@ -11,7 +12,14 @@ from .visitor import ExprVisitor, StmtVisitor
 
 class Interpreter(ExprVisitor, StmtVisitor):
     def __init__(self):
-        self._environment = Environment()
+        self._globals: Final = Environment()
+        self._environment = self._globals
+
+        self._globals.define("clock", type("", (LoxCallable,), {
+            "arity": lambda self: 0,
+            "call": lambda self, interpreter, arguments: time.time(),
+            "__str__": lambda self: "<native fn>"
+        }))
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
