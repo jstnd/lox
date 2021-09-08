@@ -34,6 +34,16 @@ class Binary(Expr):
 
 
 @dataclass
+class Call(Expr):
+    callee: Expr
+    paren: Token
+    arguments: list[Expr]
+
+    def accept(self, visitor: ExprVisitor) -> Any:
+        pass
+
+
+@dataclass
 class Grouping(Expr):
     expression: Expr
 

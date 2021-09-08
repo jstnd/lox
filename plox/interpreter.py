@@ -1,8 +1,9 @@
 from typing import Any
 
+from .callable import LoxCallable
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
-from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical
+from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical, Call
 from .stmt import Stmt, Print, Expression, Var, Block, If, While
 from .tokens import Token, TokenType
 from .visitor import ExprVisitor, StmtVisitor
@@ -59,6 +60,22 @@ class Interpreter(ExprVisitor, StmtVisitor):
             case TokenType.STAR:
                 self._check_number_operands(expr.operator, left, right)
                 return left * right
+
+    def visit_call_expr(self, expr: Call) -> Any:
+        callee: Any = self._evaluate(expr.callee)
+
+        arguments: list[Any] = []
+        for argument in expr.arguments:
+            arguments.append(self._evaluate(argument))
+
+        if not isinstance(callee, LoxCallable):
+            raise LoxRuntimeError(expr.paren, "Can only call functions and classes.")
+
+        function: LoxCallable = callee
+        if len(arguments) != function.arity():
+            raise LoxRuntimeError(expr.paren, f"Expected {function.arity()} arguments but got {len(arguments)}.")
+
+        return function.call(self, arguments)
 
     def visit_grouping_expr(self, expr: Grouping) -> Any:
         return self._evaluate(expr.expression)
