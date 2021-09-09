@@ -11,14 +11,15 @@ if TYPE_CHECKING:
 
 
 class LoxFunction(LoxCallable):
-    def __init__(self, declaration: Function):
+    def __init__(self, declaration: Function, closure: Environment):
         self._declaration: Final = declaration
+        self._closure: Final = closure
 
     def arity(self) -> int:
         return len(self._declaration.params)
 
     def call(self, interpreter: Interpreter, arguments: list[Any]) -> Any:
-        environment: Environment = Environment(interpreter.globals)
+        environment: Environment = Environment(self._closure)
 
         for i in range(len(self._declaration.params)):
             environment.define(self._declaration.params[i].lexeme, arguments[i])
