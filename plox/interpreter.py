@@ -5,17 +5,18 @@ from .callable import LoxCallable
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
 from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical, Call
-from .stmt import Stmt, Print, Expression, Var, Block, If, While
+from .function import LoxFunction
+from .stmt import Stmt, Print, Expression, Var, Block, If, While, Function
 from .tokens import Token, TokenType
 from .visitor import ExprVisitor, StmtVisitor
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
     def __init__(self):
-        self._globals: Final = Environment()
-        self._environment = self._globals
+        self.globals: Final = Environment()
+        self._environment = self.globals
 
-        self._globals.define("clock", type("", (LoxCallable,), {
+        self.globals.define("clock", type("", (LoxCallable,), {
             "arity": lambda self: 0,
             "call": lambda self, interpreter, arguments: time.time(),
             "__str__": lambda self: "<native fn>"
@@ -117,10 +118,14 @@ class Interpreter(ExprVisitor, StmtVisitor):
         return self._environment.get(expr.name)
 
     def visit_block_stmt(self, stmt: Block) -> None:
-        self._execute_block(stmt.statements, Environment(self._environment))
+        self.execute_block(stmt.statements, Environment(self._environment))
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self._evaluate(stmt.expression)
+
+    def visit_function_stmt(self, stmt: Function) -> None:
+        function = LoxFunction(stmt)
+        self._environment.define(stmt.name.lexeme, function)
 
     def visit_if_stmt(self, stmt: If) -> None:
         if self._is_truthy(self._evaluate(stmt.condition)):
@@ -192,7 +197,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def _execute(self, stmt: Stmt) -> None:
         stmt.accept(self)
 
-    def _execute_block(self, statements: list[Stmt], environment: Environment) -> None:
+    def execute_block(self, statements: list[Stmt], environment: Environment) -> None:
         previous: Environment = self._environment
 
         try:

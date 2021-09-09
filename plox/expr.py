@@ -40,7 +40,7 @@ class Call(Expr):
     arguments: list[Expr]
 
     def accept(self, visitor: ExprVisitor) -> Any:
-        pass
+        return visitor.visit_call_expr(self)
 
 
 @dataclass
