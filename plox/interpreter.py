@@ -4,9 +4,10 @@ from typing import Any, Final
 from .callable import LoxCallable
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
+from .exceptions import LoxReturn
 from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical, Call
 from .function import LoxFunction
-from .stmt import Stmt, Print, Expression, Var, Block, If, While, Function
+from .stmt import Stmt, Print, Expression, Var, Block, If, While, Function, Return
 from .tokens import Token, TokenType
 from .visitor import ExprVisitor, StmtVisitor
 
@@ -136,6 +137,13 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def visit_print_stmt(self, stmt: Print) -> None:
         value: Any = self._evaluate(stmt.expression)
         print(self._stringify(value))
+
+    def visit_return_stmt(self, stmt: Return) -> None:
+        value: Any = None
+        if stmt.value is not None:
+            value = self._evaluate(stmt.value)
+
+        raise LoxReturn(value)
 
     def visit_var_stmt(self, stmt: Var) -> None:
         value: Any = None

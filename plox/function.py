@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 from .callable import LoxCallable
 from .environment import Environment
+from .exceptions import LoxReturn
 
 if TYPE_CHECKING:
     from .interpreter import Interpreter
@@ -22,7 +23,10 @@ class LoxFunction(LoxCallable):
         for i in range(len(self._declaration.params)):
             environment.define(self._declaration.params[i].lexeme, arguments[i])
 
-        interpreter.execute_block(self._declaration.body, environment)
+        try:
+            interpreter.execute_block(self._declaration.body, environment)
+        except LoxReturn as r:
+            return r.value
 
         return None
 

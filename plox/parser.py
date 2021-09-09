@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
 from .expr import Assign, Binary, Call, Grouping, Literal, Logical, Unary, Variable
-from .stmt import Block, Expression, Function, If, Print, Var, While
+from .stmt import Block, Expression, Function, If, Print, Return, Var, While
 from .tokens import TokenType
 
 if TYPE_CHECKING:
@@ -50,6 +50,9 @@ class Parser:
 
         if self._match(TokenType.PRINT):
             return self._print_statement()
+
+        if self._match(TokenType.RETURN):
+            return self._return_statement()
 
         if self._match(TokenType.WHILE):
             return self._while_statement()
@@ -140,6 +143,15 @@ class Parser:
         value: Expr = self._expression()  # parse subsequent expression
         self._consume(TokenType.SEMICOLON, "Expect ';' after value.")  # consume terminating semicolon
         return Print(value)  # emit stmt.Print syntax tree
+
+    def _return_statement(self) -> Stmt:
+        keyword: Token = self._previous()
+        value: Optional[Expr] = None
+        if not self._check(TokenType.SEMICOLON):
+            value = self._expression()
+
+        self._consume(TokenType.SEMICOLON, "Expect ';' after return value.")
+        return Return(keyword, value)
 
     def _var_declaration(self) -> Stmt:
         name: Token = self._consume(TokenType.IDENTIFIER, "Expect variable name.")

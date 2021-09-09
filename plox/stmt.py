@@ -60,6 +60,15 @@ class Print(Stmt):
 
 
 @dataclass
+class Return(Stmt):
+    keyword: Token
+    value: Expr
+
+    def accept(self, visitor: StmtVisitor) -> Any:
+        return visitor.visit_return_stmt(self)
+
+
+@dataclass
 class Var(Stmt):
     name: Token
     initializer: Expr
