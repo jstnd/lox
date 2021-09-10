@@ -21,6 +21,9 @@ class Environment:
 
         raise LoxRuntimeError(name, f"Undefined variable '{name.lexeme}'.")
 
+    def get_at(self, distance: int, name: str) -> Any:
+        return self.ancestor(distance)._values[name]
+
     def assign(self, name: Token, value: Any) -> None:
         if name.lexeme in self._values.keys():
             self._values[name.lexeme] = value
@@ -32,5 +35,15 @@ class Environment:
 
         raise LoxRuntimeError(name, f"Undefined variable '{name.lexeme}'.")
 
+    def assign_at(self, distance: int, name: Token, value: Any) -> None:
+        self.ancestor(distance)._values[name.lexeme] = value
+
     def define(self, name: str, value: Any) -> None:
         self._values[name] = value
+
+    def ancestor(self, distance: int) -> Environment:
+        environment: Environment = self
+        for _ in range(distance):
+            environment = environment.enclosing
+
+        return environment

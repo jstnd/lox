@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Final, Union
 
 from .errors import LoxErrors
@@ -83,7 +84,7 @@ class Resolver(ExprVisitor, StmtVisitor):
         self._resolve(expr.right)
 
     def visit_variable_expr(self, expr: Variable) -> Any:
-        if len(self._scopes) != 0 and self._scopes[-1].get(expr.name.lexeme, None) is False:
+        if len(self._scopes) != 0 and self._scopes[-1].get(expr.name.lexeme) is False:
             LoxErrors.token_error(expr.name, "Can't read local variable in its own initializer.")
 
         self._resolve_local(expr, expr.name)

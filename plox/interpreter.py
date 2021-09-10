@@ -17,6 +17,8 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self.globals: Final = Environment()
         self._environment = self.globals
 
+        self._locals: Final[dict[Expr, int]] = {}
+
         self.globals.define("clock", type("", (LoxCallable,), {
             "arity": lambda self: 0,
             "call": lambda self, interpreter, arguments: time.time(),
@@ -30,9 +32,18 @@ class Interpreter(ExprVisitor, StmtVisitor):
         except LoxRuntimeError as e:
             LoxErrors.runtime_error(e)
 
+    def resolve(self, expr: Expr, depth: int) -> None:
+        self._locals[expr] = depth
+
     def visit_assign_expr(self, expr: Assign) -> Any:
         value: Any = self._evaluate(expr.value)
-        self._environment.assign(expr.name, value)
+
+        distance: int = self._locals.get(expr)
+        if distance is not None:
+            self._environment.assign_at(distance, expr.name, value)
+        else:
+            self.globals.assign(expr.name, value)
+
         return value
 
     def visit_binary_expr(self, expr: Binary) -> Any:
@@ -116,7 +127,14 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 return -float(right)
 
     def visit_variable_expr(self, expr: Variable) -> Any:
-        return self._environment.get(expr.name)
+        return self._look_up_variable(expr.name, expr)
+
+    def _look_up_variable(self, name: Token, expr: Expr) -> Any:
+        distance: int = self._locals.get(expr)
+        if distance is not None:
+            return self._environment.get_at(distance, name.lexeme)
+        else:
+            return self.globals.get(name)
 
     def visit_block_stmt(self, stmt: Block) -> None:
         self.execute_block(stmt.statements, Environment(self._environment))
