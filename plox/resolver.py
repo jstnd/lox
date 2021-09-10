@@ -8,7 +8,7 @@ from .visitor import ExprVisitor, StmtVisitor
 if TYPE_CHECKING:
     from .expr import Assign, Binary, Call, Expr, Grouping, Literal, Logical, Unary, Variable
     from .interpreter import Interpreter
-    from .stmt import Stmt, Block, Expression, Function, If, Print, Return, Var, While
+    from .stmt import Stmt, Block, Class, Expression, Function, If, Print, Return, Var, While
     from .tokens import Token
 
 
@@ -31,6 +31,10 @@ class Resolver(ExprVisitor, StmtVisitor):
         self._begin_scope()
         self.resolve_statements(stmt.statements)
         self._end_scope()
+
+    def visit_class_stmt(self, stmt: Class) -> None:
+        self._declare(stmt.name)
+        self._define(stmt.name)
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self._resolve(stmt.expression)

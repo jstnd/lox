@@ -24,6 +24,15 @@ class Block(Stmt):
 
 
 @dataclass
+class Class(Stmt):
+    name: Token
+    methods: list[Function]
+
+    def accept(self, visitor: StmtVisitor) -> Any:
+        return visitor.visit_class_stmt(self)
+
+
+@dataclass
 class Expression(Stmt):
     expression: Expr
 

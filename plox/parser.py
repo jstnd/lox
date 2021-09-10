@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
 from .expr import Assign, Binary, Call, Grouping, Literal, Logical, Unary, Variable
-from .stmt import Block, Expression, Function, If, Print, Return, Var, While
+from .stmt import Block, Class, Expression, Function, If, Print, Return, Var, While
 from .tokens import TokenType
 
 if TYPE_CHECKING:
@@ -31,6 +31,9 @@ class Parser:
 
     def _declaration(self) -> Optional[Stmt]:
         try:
+            if self._match(TokenType.CLASS):
+                return self._class_declaration()
+
             if self._match(TokenType.FUN):
                 return self._function("function")
 
@@ -40,6 +43,17 @@ class Parser:
             return self._statement()
         except ParseError:
             self._synchronize()
+
+    def _class_declaration(self) -> Stmt:
+        name: Token = self._consume(TokenType.IDENTIFIER, "Expect class name.")
+        self._consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
+
+        methods: list[Function] = []
+        while not self._check(TokenType.RIGHT_BRACE) and not self._at_end():
+            methods.append(self._function("method"))
+
+        self._consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
+        return Class(name, methods)
 
     def _statement(self) -> Stmt:
         if self._match(TokenType.FOR):

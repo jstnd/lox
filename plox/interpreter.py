@@ -1,13 +1,13 @@
 import time
 from typing import Any, Final
 
-from .callable import LoxCallable
+from .callable import LoxCallable, LoxClass
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
 from .exceptions import LoxReturn
 from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical, Call
 from .function import LoxFunction
-from .stmt import Stmt, Print, Expression, Var, Block, If, While, Function, Return
+from .stmt import Stmt, Print, Expression, Var, Block, If, While, Function, Return, Class
 from .tokens import Token, TokenType
 from .visitor import ExprVisitor, StmtVisitor
 
@@ -138,6 +138,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_block_stmt(self, stmt: Block) -> None:
         self.execute_block(stmt.statements, Environment(self._environment))
+
+    def visit_class_stmt(self, stmt: Class) -> None:
+        self._environment.define(stmt.name.lexeme, None)
+        self._environment.assign(stmt.name, LoxClass(stmt.name.lexeme))
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self._evaluate(stmt.expression)
