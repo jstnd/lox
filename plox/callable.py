@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Final
 from .errors import LoxRuntimeError
 
 if TYPE_CHECKING:
+    from .function import LoxFunction
     from .interpreter import Interpreter
     from .tokens import Token
 
@@ -20,8 +21,13 @@ class LoxCallable(ABC):
 
 
 class LoxClass(LoxCallable):
-    def __init__(self, name: str):
+    def __init__(self, name: str, methods: dict[str, LoxFunction]):
         self.name: Final = name
+        self._methods: Final = methods
+
+    def find_method(self, name: str) -> LoxFunction:
+        if name in self._methods.keys():
+            return self._methods[name]
 
     def arity(self) -> int:
         return 0
@@ -41,6 +47,10 @@ class LoxInstance:
     def get(self, name: Token) -> Any:
         if name.lexeme in self._fields.keys():
             return self._fields[name.lexeme]
+
+        method: LoxFunction = self._klass.find_method(name.lexeme)
+        if method is not None:
+            return method
 
         raise LoxRuntimeError(name, f"Undefined property '{name.lexeme}'.")
 

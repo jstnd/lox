@@ -14,7 +14,8 @@ if TYPE_CHECKING:
 
 class _FunctionType(Enum):
     NONE = auto(),
-    FUNCTION = auto()
+    FUNCTION = auto(),
+    METHOD = auto()
 
 
 class Resolver(ExprVisitor, StmtVisitor):
@@ -35,6 +36,10 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_class_stmt(self, stmt: Class) -> None:
         self._declare(stmt.name)
         self._define(stmt.name)
+
+        for method in stmt.methods:
+            declaration = _FunctionType.METHOD
+            self._resolve_function(method, declaration)
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self._resolve(stmt.expression)
