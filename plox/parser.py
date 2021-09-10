@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
-from .expr import Assign, Binary, Call, Grouping, Literal, Logical, Unary, Variable
+from .expr import Assign, Binary, Call, Get, Grouping, Literal, Logical, Set, Unary, Variable
 from .stmt import Block, Class, Expression, Function, If, Print, Return, Var, While
 from .tokens import TokenType
 
@@ -201,9 +201,11 @@ class Parser:
             equals: Token = self._previous()
             value: Expr = self._assignment()
 
-            if type(expr) is Variable:
+            if isinstance(expr, Variable):
                 name: Token = expr.name
                 return Assign(name, value)
+            elif isinstance(expr, Get):
+                return Set(expr.obj, expr.name, value)
 
             self._error(equals, "Invalid assignment target.")
 
@@ -283,6 +285,9 @@ class Parser:
         while True:
             if self._match(TokenType.LEFT_PAREN):
                 expr = self._finish_call(expr)
+            elif self._match(TokenType.DOT):
+                name: Token = self._consume(TokenType.IDENTIFIER, "Expect property name after '.'.")
+                expr = Get(expr, name)
             else:
                 break
 

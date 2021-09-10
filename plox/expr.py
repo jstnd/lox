@@ -44,6 +44,15 @@ class Call(Expr):
 
 
 @dataclass
+class Get(Expr):
+    obj: Expr
+    name: Token
+
+    def accept(self, visitor: ExprVisitor) -> Any:
+        return visitor.visit_get_expr(self)
+
+
+@dataclass
 class Grouping(Expr):
     expression: Expr
 
@@ -67,6 +76,16 @@ class Logical(Expr):
 
     def accept(self, visitor: ExprVisitor) -> Any:
         return visitor.visit_logical_expr(self)
+
+
+@dataclass
+class Set(Expr):
+    obj: Expr
+    name: Token
+    value: Expr
+
+    def accept(self, visitor: ExprVisitor) -> Any:
+        return visitor.visit_set_expr(self)
 
 
 @dataclass

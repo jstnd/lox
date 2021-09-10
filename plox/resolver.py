@@ -6,7 +6,7 @@ from .errors import LoxErrors
 from .visitor import ExprVisitor, StmtVisitor
 
 if TYPE_CHECKING:
-    from .expr import Assign, Binary, Call, Expr, Grouping, Literal, Logical, Unary, Variable
+    from .expr import Assign, Binary, Call, Expr, Get, Grouping, Literal, Logical, Set, Unary, Variable
     from .interpreter import Interpreter
     from .stmt import Stmt, Block, Class, Expression, Function, If, Print, Return, Var, While
     from .tokens import Token
@@ -84,6 +84,9 @@ class Resolver(ExprVisitor, StmtVisitor):
         for argument in expr.arguments:
             self._resolve(argument)
 
+    def visit_get_expr(self, expr: Get) -> Any:
+        self._resolve(expr.obj)
+
     def visit_grouping_expr(self, expr: Grouping) -> Any:
         self._resolve(expr.expression)
 
@@ -93,6 +96,10 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_logical_expr(self, expr: Logical) -> Any:
         self._resolve(expr.left)
         self._resolve(expr.right)
+
+    def visit_set_expr(self, expr: Set) -> Any:
+        self._resolve(expr.value)
+        self._resolve(expr.obj)
 
     def visit_unary_expr(self, expr: Unary) -> Any:
         self._resolve(expr.right)

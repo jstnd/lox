@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .expr import Assign, Binary, Call, Grouping, Literal, Logical, Unary, Variable
+    from .expr import Assign, Binary, Call, Get, Grouping, Literal, Logical, Set, Unary, Variable
     from .stmt import Block, Class, Expression, Function, If, Print, Return, Var, While
 
 
@@ -21,6 +21,10 @@ class ExprVisitor(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def visit_get_expr(self, expr: Get) -> Any:
+        raise NotImplementedError
+
+    @abstractmethod
     def visit_grouping_expr(self, expr: Grouping) -> Any:
         raise NotImplementedError
 
@@ -30,6 +34,10 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_logical_expr(self, expr: Logical) -> Any:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_set_expr(self, expr: Set) -> Any:
         raise NotImplementedError
 
     @abstractmethod

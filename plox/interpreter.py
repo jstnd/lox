@@ -1,11 +1,11 @@
 import time
 from typing import Any, Final
 
-from .callable import LoxCallable, LoxClass
+from .callable import LoxCallable, LoxClass, LoxInstance
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
 from .exceptions import LoxReturn
-from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical, Call
+from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical, Call, Get, Set
 from .function import LoxFunction
 from .stmt import Stmt, Print, Expression, Var, Block, If, While, Function, Return, Class
 from .tokens import Token, TokenType
@@ -98,6 +98,13 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
         return function.call(self, arguments)
 
+    def visit_get_expr(self, expr: Get) -> Any:
+        obj: Any = self._evaluate(expr.obj)
+        if isinstance(obj, LoxInstance):
+            return obj.get(expr.name)
+
+        raise LoxRuntimeError(expr.name, "Only instances have properties.")
+
     def visit_grouping_expr(self, expr: Grouping) -> Any:
         return self._evaluate(expr.expression)
 
@@ -115,6 +122,16 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 return left
 
         return self._evaluate(expr.right)
+
+    def visit_set_expr(self, expr: Set) -> Any:
+        obj: Any = self._evaluate(expr.obj)
+
+        if not isinstance(obj, LoxInstance):
+            raise LoxRuntimeError(expr.name, "Only instances have fields.")
+
+        value: Any = self._evaluate(expr.value)
+        obj.set(expr.name, value)
+        return value
 
     def visit_unary_expr(self, expr: Unary) -> Any:
         right: Any = self._evaluate(expr.right)
