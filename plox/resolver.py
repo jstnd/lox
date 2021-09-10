@@ -1,4 +1,5 @@
 from __future__ import annotations
+from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Final, Union
 
 from .errors import LoxErrors
@@ -11,10 +12,16 @@ if TYPE_CHECKING:
     from .tokens import Token
 
 
+class _FunctionType(Enum):
+    NONE = auto(),
+    FUNCTION = auto()
+
+
 class Resolver(ExprVisitor, StmtVisitor):
     def __init__(self, interpreter: Interpreter):
         self._interpreter: Final = interpreter
         self._scopes: Final[list[dict[str, bool]]] = []
+        self._current_function: _FunctionType = _FunctionType.NONE
 
     def resolve_statements(self, statements: list[Stmt]) -> None:
         for statement in statements:
@@ -26,12 +33,12 @@ class Resolver(ExprVisitor, StmtVisitor):
         self._end_scope()
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
-        self._resolve(stmt)
+        self._resolve(stmt.expression)
 
     def visit_function_stmt(self, stmt: Function) -> None:
         self._declare(stmt.name)
         self._define(stmt.name)
-        self._resolve_function(stmt)
+        self._resolve_function(stmt, _FunctionType.FUNCTION)
 
     def visit_if_stmt(self, stmt: If) -> None:
         self._resolve(stmt.condition)
@@ -43,6 +50,9 @@ class Resolver(ExprVisitor, StmtVisitor):
         self._resolve(stmt.expression)
 
     def visit_return_stmt(self, stmt: Return) -> None:
+        if self._current_function == _FunctionType.NONE:
+            LoxErrors.token_error(stmt.keyword, "Can't return from top-level code.")
+
         if stmt.value is not None:
             self._resolve(stmt.value)
 
@@ -92,7 +102,10 @@ class Resolver(ExprVisitor, StmtVisitor):
     def _resolve(self, es: Union[Expr, Stmt]) -> None:
         es.accept(self)
 
-    def _resolve_function(self, function: Function) -> None:
+    def _resolve_function(self, function: Function, type: _FunctionType) -> None:
+        enclosing_function: _FunctionType = self._current_function
+        self._current_function = type
+
         self._begin_scope()
         for param in function.params:
             self._declare(param)
@@ -100,6 +113,8 @@ class Resolver(ExprVisitor, StmtVisitor):
 
         self.resolve_statements(function.body)
         self._end_scope()
+
+        self._current_function = enclosing_function
 
     def _resolve_local(self, expr: Expr, name: Token) -> None:
         for i in range(len(self._scopes) - 1, -1, -1):
@@ -116,6 +131,9 @@ class Resolver(ExprVisitor, StmtVisitor):
     def _declare(self, name: Token) -> None:
         if len(self._scopes) == 0:
             return
+
+        if name.lexeme in self._scopes[-1].keys():
+            LoxErrors.token_error(name, "Already a variable with this name in this scope.")
 
         self._scopes[-1][name.lexeme] = False
 

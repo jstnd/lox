@@ -14,10 +14,10 @@ class Expr(ABC):
         pass
 
 
-@dataclass
 class Assign(Expr):
-    name: Token
-    value: Expr
+    def __init__(self, name: Token, value: Expr):
+        self.name = name
+        self.value = value
 
     def accept(self, visitor: ExprVisitor) -> Any:
         return visitor.visit_assign_expr(self)
@@ -78,9 +78,9 @@ class Unary(Expr):
         return visitor.visit_unary_expr(self)
 
 
-@dataclass
 class Variable(Expr):
-    name: Token
+    def __init__(self, name: Token):
+        self.name = name
 
     def accept(self, visitor: ExprVisitor) -> Any:
         return visitor.visit_variable_expr(self)

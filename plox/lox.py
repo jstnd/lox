@@ -28,6 +28,9 @@ class Lox:
         resolver = Resolver(Lox.interpreter)
         resolver.resolve_statements(statements)
 
+        if LoxErrors.had_error:
+            return
+
         Lox.interpreter.interpret(statements)
 
     def run_prompt(self):
