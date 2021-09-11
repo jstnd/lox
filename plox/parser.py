@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final, Optional
 
 from .errors import LoxErrors, ParseError
-from .expr import Assign, Binary, Call, Get, Grouping, Literal, Logical, Set, This, Unary, Variable
+from .expr import Assign, Binary, Call, Get, Grouping, Literal, Logical, Set, Super, This, Unary, Variable
 from .stmt import Block, Class, Expression, Function, If, Print, Return, Var, While
 from .tokens import TokenType
 
@@ -326,6 +326,12 @@ class Parser:
 
         if self._match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self._previous().literal)
+
+        if self._match(TokenType.SUPER):
+            keyword: Token = self._previous()
+            self._consume(TokenType.DOT, "Expect '.' after 'super'.")
+            method: Token = self._consume(TokenType.IDENTIFIER, "Expect superclass method name.")
+            return Super(keyword, method)
 
         if self._match(TokenType.THIS):
             return This(self._previous())

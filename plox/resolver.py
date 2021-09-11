@@ -6,7 +6,7 @@ from .errors import LoxErrors
 from .visitor import ExprVisitor, StmtVisitor
 
 if TYPE_CHECKING:
-    from .expr import Assign, Binary, Call, Expr, Get, Grouping, Literal, Logical, Set, This, Unary, Variable
+    from .expr import Assign, Binary, Call, Expr, Get, Grouping, Literal, Logical, Set, Super, This, Unary, Variable
     from .interpreter import Interpreter
     from .stmt import Stmt, Block, Class, Expression, Function, If, Print, Return, Var, While
     from .tokens import Token
@@ -21,7 +21,8 @@ class _FunctionType(Enum):
 
 class _ClassType(Enum):
     NONE = auto(),
-    CLASS = auto()
+    CLASS = auto(),
+    SUBCLASS = auto()
 
 
 class Resolver(ExprVisitor, StmtVisitor):
@@ -51,7 +52,11 @@ class Resolver(ExprVisitor, StmtVisitor):
             LoxErrors.token_error(stmt.superclass.name, "A class can't inherit from itself.")
 
         if stmt.superclass is not None:
+            self._current_class = _ClassType.SUBCLASS
             self._resolve(stmt.superclass)
+
+            self._begin_scope()
+            self._scopes[-1]["super"] = True
 
         self._begin_scope()
         self._scopes[-1]["this"] = True
@@ -64,6 +69,10 @@ class Resolver(ExprVisitor, StmtVisitor):
             self._resolve_function(method, declaration)
 
         self._end_scope()
+
+        if stmt.superclass is not None:
+            self._end_scope()
+
         self._current_class = enclosing_class
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
@@ -133,6 +142,14 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_set_expr(self, expr: Set) -> Any:
         self._resolve(expr.value)
         self._resolve(expr.obj)
+
+    def visit_super_expr(self, expr: Super) -> Any:
+        if self._current_class == _ClassType.NONE:
+            LoxErrors.token_error(expr.keyword, "Can't use 'super' outside of a class.")
+        elif self._current_class != _ClassType.SUBCLASS:
+            LoxErrors.token_error(expr.keyword, "Can't use 'super' in a class with no superclass.")
+
+        self._resolve_local(expr, expr.keyword)
 
     def visit_this_expr(self, expr: This) -> Any:
         if self._current_class == _ClassType.NONE:

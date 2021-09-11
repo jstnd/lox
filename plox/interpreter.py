@@ -5,7 +5,7 @@ from .callable import LoxCallable, LoxClass, LoxInstance
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
 from .exceptions import LoxReturn
-from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical, Call, Get, Set, This
+from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical, Call, Get, Set, This, Super
 from .function import LoxFunction
 from .stmt import Stmt, Print, Expression, Var, Block, If, While, Function, Return, Class
 from .tokens import Token, TokenType
@@ -133,6 +133,18 @@ class Interpreter(ExprVisitor, StmtVisitor):
         obj.set(expr.name, value)
         return value
 
+    def visit_super_expr(self, expr: Super) -> Any:
+        distance: int = self._locals[expr]
+        superclass: LoxClass = self._environment.get_at(distance, "super")
+        obj: LoxInstance = self._environment.get_at(distance - 1, "this")
+
+        method: LoxFunction = superclass.find_method(expr.method.lexeme)
+
+        if method is None:
+            raise LoxRuntimeError(expr.method, f"Undefined property '{expr.method.lexeme}'.")
+
+        return method.bind(obj)
+
     def visit_this_expr(self, expr: This) -> Any:
         return self._look_up_variable(expr.keyword, expr)
 
@@ -168,12 +180,20 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
         self._environment.define(stmt.name.lexeme, None)
 
+        if stmt.superclass is not None:
+            self._environment = Environment(self._environment)
+            self._environment.define("super", superclass)
+
         methods: dict[str, LoxFunction] = {}
         for method in stmt.methods:
             function = LoxFunction(method, self._environment, method.name.lexeme == "init")
             methods[method.name.lexeme] = function
 
         klass = LoxClass(stmt.name.lexeme, superclass, methods)
+
+        if superclass is not None:
+            self._environment = self._environment.enclosing
+
         self._environment.assign(stmt.name, klass)
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
