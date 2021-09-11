@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .expr import Expr
+    from .expr import Expr, Variable
     from .tokens import Token
     from .visitor import StmtVisitor
 
@@ -26,6 +26,7 @@ class Block(Stmt):
 @dataclass
 class Class(Stmt):
     name: Token
+    superclass: Variable
     methods: list[Function]
 
     def accept(self, visitor: StmtVisitor) -> Any:

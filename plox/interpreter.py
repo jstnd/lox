@@ -1,5 +1,5 @@
 import time
-from typing import Any, Final
+from typing import Any, Final, Optional
 
 from .callable import LoxCallable, LoxClass, LoxInstance
 from .environment import Environment
@@ -160,6 +160,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self.execute_block(stmt.statements, Environment(self._environment))
 
     def visit_class_stmt(self, stmt: Class) -> None:
+        superclass: Optional[Any] = None
+        if stmt.superclass is not None:
+            superclass = self._evaluate(stmt.superclass)
+            if not isinstance(superclass, LoxClass):
+                raise LoxRuntimeError(stmt.superclass.name, "Superclass must be a class.")
+
         self._environment.define(stmt.name.lexeme, None)
 
         methods: dict[str, LoxFunction] = {}
@@ -167,7 +173,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
             function = LoxFunction(method, self._environment, method.name.lexeme == "init")
             methods[method.name.lexeme] = function
 
-        klass = LoxClass(stmt.name.lexeme, methods)
+        klass = LoxClass(stmt.name.lexeme, superclass, methods)
         self._environment.assign(stmt.name, klass)
 
     def visit_expression_stmt(self, stmt: Expression) -> None:

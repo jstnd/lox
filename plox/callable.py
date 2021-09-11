@@ -21,8 +21,9 @@ class LoxCallable(ABC):
 
 
 class LoxClass(LoxCallable):
-    def __init__(self, name: str, methods: dict[str, LoxFunction]):
+    def __init__(self, name: str, superclass: LoxClass, methods: dict[str, LoxFunction]):
         self.name: Final = name
+        self._superclass: Final = superclass
         self._methods: Final = methods
 
     def find_method(self, name: str) -> LoxFunction:
