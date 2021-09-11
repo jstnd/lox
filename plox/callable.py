@@ -30,6 +30,9 @@ class LoxClass(LoxCallable):
         if name in self._methods.keys():
             return self._methods[name]
 
+        if self._superclass is not None:
+            return self._superclass.find_method(name)
+
     def arity(self) -> int:
         initializer: LoxFunction = self.find_method("init")
         if initializer is None:
