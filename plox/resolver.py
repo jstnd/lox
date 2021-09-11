@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 class _FunctionType(Enum):
     NONE = auto(),
     FUNCTION = auto(),
+    INITIALIZER = auto(),
     METHOD = auto()
 
 
@@ -51,6 +52,9 @@ class Resolver(ExprVisitor, StmtVisitor):
 
         for method in stmt.methods:
             declaration = _FunctionType.METHOD
+            if method.name.lexeme == "init":
+                declaration = _FunctionType.INITIALIZER
+
             self._resolve_function(method, declaration)
 
         self._end_scope()
@@ -78,6 +82,9 @@ class Resolver(ExprVisitor, StmtVisitor):
             LoxErrors.token_error(stmt.keyword, "Can't return from top-level code.")
 
         if stmt.value is not None:
+            if self._current_function == _FunctionType.INITIALIZER:
+                LoxErrors.token_error(stmt.keyword, "Can't return a value from an initializer.")
+
             self._resolve(stmt.value)
 
     def visit_var_stmt(self, stmt: Var) -> None:
