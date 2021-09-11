@@ -6,7 +6,7 @@ from .errors import LoxErrors
 from .visitor import ExprVisitor, StmtVisitor
 
 if TYPE_CHECKING:
-    from .expr import Assign, Binary, Call, Expr, Get, Grouping, Literal, Logical, Set, Unary, Variable
+    from .expr import Assign, Binary, Call, Expr, Get, Grouping, Literal, Logical, Set, This, Unary, Variable
     from .interpreter import Interpreter
     from .stmt import Stmt, Block, Class, Expression, Function, If, Print, Return, Var, While
     from .tokens import Token
@@ -18,11 +18,17 @@ class _FunctionType(Enum):
     METHOD = auto()
 
 
+class _ClassType(Enum):
+    NONE = auto(),
+    CLASS = auto()
+
+
 class Resolver(ExprVisitor, StmtVisitor):
     def __init__(self, interpreter: Interpreter):
         self._interpreter: Final = interpreter
         self._scopes: Final[list[dict[str, bool]]] = []
-        self._current_function: _FunctionType = _FunctionType.NONE
+        self._current_function = _FunctionType.NONE
+        self._current_class = _ClassType.NONE
 
     def resolve_statements(self, statements: list[Stmt]) -> None:
         for statement in statements:
@@ -34,12 +40,21 @@ class Resolver(ExprVisitor, StmtVisitor):
         self._end_scope()
 
     def visit_class_stmt(self, stmt: Class) -> None:
+        enclosing_class: _ClassType = self._current_class
+        self._current_class = _ClassType.CLASS
+
         self._declare(stmt.name)
         self._define(stmt.name)
+
+        self._begin_scope()
+        self._scopes[-1]["this"] = True
 
         for method in stmt.methods:
             declaration = _FunctionType.METHOD
             self._resolve_function(method, declaration)
+
+        self._end_scope()
+        self._current_class = enclosing_class
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self._resolve(stmt.expression)
@@ -105,6 +120,12 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_set_expr(self, expr: Set) -> Any:
         self._resolve(expr.value)
         self._resolve(expr.obj)
+
+    def visit_this_expr(self, expr: This) -> Any:
+        if self._current_class == _ClassType.NONE:
+            LoxErrors.token_error(expr.keyword, "Can't use 'this' outside of a class.")
+
+        self._resolve_local(expr, expr.keyword)
 
     def visit_unary_expr(self, expr: Unary) -> Any:
         self._resolve(expr.right)

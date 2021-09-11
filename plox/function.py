@@ -6,6 +6,7 @@ from .environment import Environment
 from .exceptions import LoxReturn
 
 if TYPE_CHECKING:
+    from .callable import LoxInstance
     from .interpreter import Interpreter
     from .stmt import Function
 
@@ -14,6 +15,11 @@ class LoxFunction(LoxCallable):
     def __init__(self, declaration: Function, closure: Environment):
         self._declaration: Final = declaration
         self._closure: Final = closure
+
+    def bind(self, instance: LoxInstance) -> LoxFunction:
+        environment = Environment(self._closure)
+        environment.define("this", instance)
+        return LoxFunction(self._declaration, environment)
 
     def arity(self) -> int:
         return len(self._declaration.params)

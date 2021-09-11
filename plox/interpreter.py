@@ -5,7 +5,7 @@ from .callable import LoxCallable, LoxClass, LoxInstance
 from .environment import Environment
 from .errors import LoxErrors, LoxRuntimeError
 from .exceptions import LoxReturn
-from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical, Call, Get, Set
+from .expr import Assign, Expr, Unary, Literal, Grouping, Binary, Variable, Logical, Call, Get, Set, This
 from .function import LoxFunction
 from .stmt import Stmt, Print, Expression, Var, Block, If, While, Function, Return, Class
 from .tokens import Token, TokenType
@@ -132,6 +132,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
         value: Any = self._evaluate(expr.value)
         obj.set(expr.name, value)
         return value
+
+    def visit_this_expr(self, expr: This) -> Any:
+        return self._look_up_variable(expr.keyword, expr)
 
     def visit_unary_expr(self, expr: Unary) -> Any:
         right: Any = self._evaluate(expr.right)
