@@ -32,7 +32,7 @@ static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
                 if (tombstone == NULL) tombstone = entry; // found a tombstone
             }
         } else if (entry->key == key) {
-            return key; // found the key
+            return entry; // found the key
         }
 
         index = (index + 1) % capacity;
