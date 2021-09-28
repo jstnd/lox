@@ -103,17 +103,18 @@ static InterpretResult run() {
                 push(constant);
                 break;
             }
-            case OP_NIL:      push(NIL_VAL); break;
-            case OP_TRUE:     push(BOOL_VAL(true)); break;
-            case OP_FALSE:    push(BOOL_VAL(false)); break;
+            case OP_NIL:   push(NIL_VAL); break;
+            case OP_TRUE:  push(BOOL_VAL(true)); break;
+            case OP_FALSE: push(BOOL_VAL(false)); break;
+            case OP_POP:   pop(); break;
             case OP_EQUAL: {
                 Value b = pop();
                 Value a = pop();
                 push(BOOL_VAL(valuesEqual(a, b)));
                 break;
             }
-            case OP_GREATER:  BINARY_OP(BOOL_VAL, >); break;
-            case OP_LESS:     BINARY_OP(BOOL_VAL, <); break;
+            case OP_GREATER: BINARY_OP(BOOL_VAL, >); break;
+            case OP_LESS:    BINARY_OP(BOOL_VAL, <); break;
             case OP_ADD: {
                 if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
                     concatenate();
@@ -138,9 +139,13 @@ static InterpretResult run() {
                 }
                 push(NUMBER_VAL(-AS_NUMBER(pop())));
                 break;
-            case OP_RETURN: {
+            case OP_PRINT: {
                 printValue(pop());
                 printf("\n");
+                break;
+            }
+            case OP_RETURN: {
+                // Exit interpreter
                 return INTERPRET_OK;
             }
         }
