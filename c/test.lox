@@ -1,5 +1,5 @@
-var breakfast = "beignets";
-var beverage = "cafe au lait";
-breakfast = "beignets with " + beverage;
+fun areWeHavingItYet() {
+  print "Yes we are!";
+}
 
-print breakfast;
+print areWeHavingItYet;
